@@ -57,8 +57,11 @@ echo ">> current -> versions/$VERSAO"
 [ -L "$BASE/current" ] && cp -P "$BASE/current" "$BASE/previous" 2>/dev/null || true
 ln -sfn "versions/$VERSAO" "$BASE/current.tmp" && mv -T "$BASE/current.tmp" "$BASE/current"
 mkdir -p "$BIN"
-ln -sfn "$BASE/current/bin/gines-forged" "$BIN/gines-forged"
-ln -sfn "$BASE/current/bin/forge-cli" "$BIN/forge-cli"
+# Scripts, nao symlinks: o wrapper do pacote resolve o proprio diretorio por $0, e um
+# symlink em ~/.local/bin o faria procurar o Python la (achado do teste ponta a ponta).
+for w in gines-forged forge-cli; do
+  printf '#!/bin/sh\nexec "%s/current/bin/%s" "$@"\n' "$BASE" "$w" > "$BIN/$w.tmp" && chmod 755 "$BIN/$w.tmp" && mv -f "$BIN/$w.tmp" "$BIN/$w"
+done
 
 echo ">> servico de usuario"
 mkdir -p "$UNIT_DIR"
