@@ -1,0 +1,84 @@
+# Publica uma versão do gines-forge. Quem dispara é o CI PRIVADO do gines-forge (ci.yml, na tag v*): ele
+# empurra, com uma deploy key de escrita, um branch temporário `publish/v<versão>-<run>` com o tarball PARTIDO
+# em pedaços (o git recusa arquivo acima de 100 MB) e um meta.json. Aqui o pacote é remontado, conferido pelo
+# sha256, publicado como release com o GITHUB_TOKEN deste repositório, o latest.json é atualizado na main e o
+# branch é apagado. O código do daemon nunca passa por aqui: só o pacote pronto.
+name: publish
+
+on:
+  push:
+    branches: ['publish/**']
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remonta e confere o pacote
+        run: |
+          set -euo pipefail
+          meta=pending/meta.json
+          version="$(jq -r .version "$meta")"
+          file="$(jq -r .file "$meta")"
+          sum="$(jq -r .sha256 "$meta")"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::versão inválida: $version"; exit 1; }
+          [[ "$file" == "gines-forge-$version-x86_64-linux.tar.gz" ]] || { echo "::error::nome inesperado: $file"; exit 1; }
+          [[ "$sum" =~ ^[0-9a-f]{64}$ ]] || { echo "::error::sha256 inválido"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/out"
+          cat pending/parts/"$file".part-* > "$RUNNER_TEMP/out/$file"
+          echo "$sum  $file" > "$RUNNER_TEMP/out/$file.sha256"
+          (cd "$RUNNER_TEMP/out" && sha256sum -c "$file.sha256")
+          # O tarball diz a versão dele mesmo: gines-forge-<versão>/VERSION.
+          tar -xzf "$RUNNER_TEMP/out/$file" -C "$RUNNER_TEMP" "gines-forge-$version/VERSION"
+          grep -qx "$version" "$RUNNER_TEMP/gines-forge-$version/VERSION" || { echo "::error::o tarball não é da versão $version"; exit 1; }
+          {
+            echo "version=$version"; echo "file=$file"; echo "sum=$sum"
+            echo "commit=$(jq -r .commit "$meta")"; echo "notes_url=$(jq -r .notes_url "$meta")"
+          } >> "$GITHUB_ENV"
+          ls -l "$RUNNER_TEMP/out"
+
+      - name: Cria a release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "v$version" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::a release v$version já existe"; exit 1; fi
+          cat > "$RUNNER_TEMP/notes.md" <<NOTES
+          **Arquivo:** \`$file\` (Linux x86-64, sem root)
+          **sha256:** \`$sum\`
+          **Origem:** \`gines-forge\` commit \`${commit:0:7}\` — notas: $notes_url
+
+          \`\`\`sh
+          curl -fsSL https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/install.sh | sh
+          \`\`\`
+          NOTES
+          sed -i 's/^          //' "$RUNNER_TEMP/notes.md"
+          gh release create "v$version" "$RUNNER_TEMP"/out/* -R "$GITHUB_REPOSITORY" --target main \
+            --title "gines-forge $version" --notes-file "$RUNNER_TEMP/notes.md"
+          echo "publicado: https://github.com/$GITHUB_REPOSITORY/releases/tag/v$version"
+
+      - name: Atualiza o latest.json na main
+        run: |
+          set -euo pipefail
+          git fetch -q origin main && git checkout -q main
+          jq -n --arg version "$version" --arg file "$file" --arg sha256 "$sum" \
+            --arg url "https://github.com/$GITHUB_REPOSITORY/releases/download/v$version/$file" \
+            --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg notes "$notes_url" \
+            '{version:$version, file:$file, sha256:$sha256, url:$url, published_at:$at, notes_url:$notes}' > latest.json
+          cat latest.json
+          git -c user.name=gines-ai -c user.email=gines.kd@gmail.com commit -qam "latest.json: $version" || true
+          git push -q origin main
+
+      - name: Apaga o branch temporário
+        if: always()
+        run: git push origin --delete "$GITHUB_REF_NAME" || true
