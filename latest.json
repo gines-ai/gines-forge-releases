@@ -1,8 +1,8 @@
 {
-  "version": "0.45.11",
-  "file": "gines-forge-0.45.11-x86_64-linux.tar.gz",
-  "sha256": "f80c0595c5cc42ed31f7855f38039cda8de52bc38cfd2859477156fce4f61c78",
-  "url": "https://github.com/gines-ai/gines-forge-releases/releases/download/v0.45.11/gines-forge-0.45.11-x86_64-linux.tar.gz",
-  "published_at": "2026-09-26T07:59:21Z",
-  "notes_url": "https://github.com/gines-ai/gines-forge/releases/tag/v0.45.11"
+  "version": "0.45.12",
+  "file": "gines-forge-0.45.12-x86_64-linux.tar.gz",
+  "sha256": "8445ce4c681d54b402b58ea4fac9e13cb5463bd94e0f76b537488dcc70ff6f1d",
+  "url": "https://github.com/gines-ai/gines-forge-releases/releases/download/v0.45.12/gines-forge-0.45.12-x86_64-linux.tar.gz",
+  "published_at": "2026-09-26T08:14:33Z",
+  "notes_url": "https://github.com/gines-ai/gines-forge/releases/tag/v0.45.12"
 }
