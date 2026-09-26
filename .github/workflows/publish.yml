@@ -76,7 +76,8 @@ jobs:
             --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg notes "$notes_url" \
             '{version:$version, file:$file, sha256:$sha256, url:$url, published_at:$at, notes_url:$notes}' > latest.json
           cat latest.json
-          git -c user.name=gines-ai -c user.email=gines.kd@gmail.com commit -qam "latest.json: $version" || true
+          git add latest.json
+          git -c user.name=gines-ai -c user.email=gines.kd@gmail.com commit -qm "latest.json: $version"
           git push -q origin main
 
       - name: Apaga o branch temporário
