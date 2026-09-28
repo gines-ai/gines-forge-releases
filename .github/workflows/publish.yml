@@ -40,6 +40,16 @@ jobs:
           # O tarball diz a versão dele mesmo: gines-forge-<versão>/VERSION.
           tar -xzf "$RUNNER_TEMP/out/$file" -C "$RUNNER_TEMP" "gines-forge-$version/VERSION"
           grep -qx "$version" "$RUNNER_TEMP/gines-forge-$version/VERSION" || { echo "::error::o tarball não é da versão $version"; exit 1; }
+          # Assinatura ed25519 (gines-forge >= 0.47.0): obrigatória a partir dela. A verificação de verdade é a do
+          # daemon e a do install.sh (raiz cravada); aqui só se garante que ela viaja junto e bate com o pacote.
+          if [ -f "pending/$file.sig" ]; then
+            cp "pending/$file.sig" "$RUNNER_TEMP/out/$file.sig"
+            grep -qx "sha256 $sum" "pending/$file.sig" || { echo "::error::a assinatura é de outro pacote"; exit 1; }
+            grep -qx "size $(wc -c < "$RUNNER_TEMP/out/$file" | tr -d ' ')" "pending/$file.sig" || { echo "::error::tamanho difere do assinado"; exit 1; }
+            [ "$(jq -r .signature.alg "$meta")" = "ed25519" ] || { echo "::error::meta.json sem assinatura"; exit 1; }
+          elif [ "$(printf '%s\n0.47.0\n' "$version" | sort -V | head -1)" = "0.47.0" ]; then
+            echo "::error::$version sem assinatura: a partir da 0.47.0 toda release é assinada"; exit 1
+          fi
           {
             echo "version=$version"; echo "file=$file"; echo "sum=$sum"
             echo "commit=$(jq -r .commit "$meta")"; echo "notes_url=$(jq -r .notes_url "$meta")"
@@ -70,11 +80,12 @@ jobs:
       - name: Atualiza o latest.json na main
         run: |
           set -euo pipefail
+          # O meta.json (com size, issued_at e signature, quando assinada) + url e published_at.
+          jq --arg url "https://github.com/$GITHUB_REPOSITORY/releases/download/v$version/$file" \
+            --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '. + {url:$url, published_at:$at}' "$GITHUB_WORKSPACE/pending/meta.json" > "$RUNNER_TEMP/latest.json"
           git fetch -q origin main && git checkout -q main
-          jq -n --arg version "$version" --arg file "$file" --arg sha256 "$sum" \
-            --arg url "https://github.com/$GITHUB_REPOSITORY/releases/download/v$version/$file" \
-            --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg notes "$notes_url" \
-            '{version:$version, file:$file, sha256:$sha256, url:$url, published_at:$at, notes_url:$notes}' > latest.json
+          cp "$RUNNER_TEMP/latest.json" latest.json
           cat latest.json
           git add latest.json
           git -c user.name=gines-ai -c user.email=gines.kd@gmail.com commit -qm "latest.json: $version"
