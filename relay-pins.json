@@ -1,0 +1,20 @@
+{
+  "url": "wss://relay.gines.ai",
+  "serial": 1,
+  "issued_at": "2026-10-07T07:23:05Z",
+  "pins": [
+    "7BJo-L2u26HfjdX_6MHu_OSoI9BD981JF_M0Gnaj_lI"
+  ],
+  "signature": {
+    "alg": "ed25519",
+    "key_id": "6f9be382dcadf934",
+    "sig": "sXk60KXdZVLioTiGxkMbPIMTpnVqJyQXNrJfj9CN43Tvr/T4InCYcJI37OPgIdD5fVyriMwNrXw568gxM27lCg==",
+    "cert": {
+      "key_id": "6f9be382dcadf934",
+      "pub": "RPCaWwVHi6SZQW5pLluChZQSRrLaxtNARGu4E0Xv+RQ=",
+      "not_after": "2027-03-27T22:19:26Z",
+      "serial": 1,
+      "sig": "iYYVhH2T28M4uGQDs5KaKggSKso5G1vENF8Qb8PRE+SpI1S6B0zeLP5WOvLEkBVagrn4jNw3no7KrFY8DJtMDA=="
+    }
+  }
+}
