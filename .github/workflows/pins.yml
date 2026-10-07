@@ -1,0 +1,62 @@
+# Promove o BOLETIM DE PINS do relay a relay-pins.json na main. Quem dispara é o CI PRIVADO do gines-forge
+# (relay-pin.yml): ele assina o boletim com a chave de release (cadeia da raiz offline do operador) e o empurra,
+# com a deploy key de escrita, num branch temporário `pins/<serial>-<run>`. Aqui só se confere a forma e que o
+# serial cresce; a verificação de verdade (raiz -> certificado -> assinatura, anti-rollback) é a do daemon, que
+# busca este arquivo quando a chave TLS do relay muda (a Cloudflare troca a do edge a cada renovação).
+name: pins
+
+on:
+  push:
+    branches: ['pins/**']
+
+concurrency:
+  # O mesmo grupo do publish: as duas escritas na main nunca correm juntas.
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  promove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Confere a forma e o serial
+        run: |
+          set -euo pipefail
+          f=pending-pins/relay-pins.json
+          jq -e '
+            .url == "wss://relay.gines.ai"
+            and (.serial | type == "number" and . >= 1)
+            and (.pins | type == "array" and length >= 1 and length <= 3
+                 and all(.[]; type == "string" and test("^[A-Za-z0-9_-]{43}$")))
+            and .signature.alg == "ed25519"
+            and (.signature.cert | type == "object")
+          ' "$f" > /dev/null || { echo "::error::boletim mal formado"; exit 1; }
+          novo="$(jq .serial "$f")"
+          git fetch -q origin main
+          if git cat-file -e origin/main:relay-pins.json 2>/dev/null; then
+            atual="$(git show origin/main:relay-pins.json | jq .serial)"
+          else
+            atual=0
+          fi
+          [ "$novo" -gt "$atual" ] || { echo "::error::serial $novo não é maior que o da main ($atual)"; exit 1; }
+          cp "$f" "$RUNNER_TEMP/relay-pins.json"
+          echo "SERIAL=$novo" >> "$GITHUB_ENV"
+
+      - name: Atualiza o relay-pins.json na main
+        run: |
+          set -euo pipefail
+          git checkout -q main
+          cp "$RUNNER_TEMP/relay-pins.json" relay-pins.json
+          cat relay-pins.json
+          git add relay-pins.json
+          git -c user.name=gines-ai -c user.email=gines.kd@gmail.com commit -qm "relay-pins.json: serial $SERIAL"
+          git push -q origin main
+
+      - name: Apaga o branch temporário
+        if: always()
+        run: git push origin --delete "$GITHUB_REF_NAME" || true
