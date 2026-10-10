@@ -66,7 +66,7 @@ jobs:
           cat > "$RUNNER_TEMP/notes.md" <<NOTES
           **Arquivo:** \`$file\` (Linux x86-64, sem root)
           **sha256:** \`$sum\`
-          **Origem:** \`gines-forge\` commit \`${commit:0:7}\` — notas: $notes_url
+          **Origem:** \`gines-forge\` commit \`${commit:0:7}\`
 
           \`\`\`sh
           curl -fsSL https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/install.sh | sh
