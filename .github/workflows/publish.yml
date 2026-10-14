@@ -73,6 +73,11 @@ jobs:
           \`\`\`
           NOTES
           sed -i 's/^          //' "$RUNNER_TEMP/notes.md"
+          # O que mudou nesta versao: o trecho do CHANGELOG que o CI do gines-forge
+          # manda junto (gines-forge >= 0.50.4). Publico por decisao do operador.
+          if [ -s pending/NOTES.md ]; then
+            { echo; echo "## O que mudou"; echo; cat pending/NOTES.md; } >> "$RUNNER_TEMP/notes.md"
+          fi
           gh release create "v$version" "$RUNNER_TEMP"/out/* -R "$GITHUB_REPOSITORY" --target main \
             --title "gines-forge $version" --notes-file "$RUNNER_TEMP/notes.md"
           echo "publicado: https://github.com/$GITHUB_REPOSITORY/releases/tag/v$version"
