@@ -1,15 +1,15 @@
 {
-  "version": "0.59.0",
-  "file": "gines-forge-0.59.0-x86_64-linux.tar.gz",
-  "sha256": "8fab1f5f63993fc63ba1cff69df9cbbe9bbe298dcc6c75ccc9c71897206e4b0a",
-  "commit": "1af502f244fafa4ebdcb62b2fd06d901f04aa024",
-  "notes_url": "https://github.com/gines-ai/gines-forge-releases/releases/tag/v0.59.0",
-  "size": 310905453,
-  "issued_at": "2026-10-16T07:11:13Z",
+  "version": "0.59.1",
+  "file": "gines-forge-0.59.1-x86_64-linux.tar.gz",
+  "sha256": "0b22aa507c60ae999bd500c574ab456939aaf2d77e65aa27dbdbfbc4dcec1ecc",
+  "commit": "1a03485e65f46613640664e075ec29e843ea86a9",
+  "notes_url": "https://github.com/gines-ai/gines-forge-releases/releases/tag/v0.59.1",
+  "size": 312178128,
+  "issued_at": "2026-10-16T10:29:09Z",
   "signature": {
     "alg": "ed25519",
     "key_id": "6f9be382dcadf934",
-    "sig": "lmwGpcSnUWPNWEqUJQ0UNnywxtqo+wVZ1/LovFuS1zhC3dz24gsaPrixQTRW6ReG7A5vzvQ63kY2sENwYgsgBg==",
+    "sig": "iuwnvixQ7hvZ/YN2/NAPDxrxGWSHhc1YIUYin+b0SzzZ6DeP+AvCGfHLMIxHTvHNGBGDgASCP7y/x+oovQdTCA==",
     "cert": {
       "key_id": "6f9be382dcadf934",
       "pub": "RPCaWwVHi6SZQW5pLluChZQSRrLaxtNARGu4E0Xv+RQ=",
@@ -18,6 +18,6 @@
       "sig": "iYYVhH2T28M4uGQDs5KaKggSKso5G1vENF8Qb8PRE+SpI1S6B0zeLP5WOvLEkBVagrn4jNw3no7KrFY8DJtMDA=="
     }
   },
-  "url": "https://github.com/gines-ai/gines-forge-releases/releases/download/v0.59.0/gines-forge-0.59.0-x86_64-linux.tar.gz",
-  "published_at": "2026-10-16T07:12:45Z"
+  "url": "https://github.com/gines-ai/gines-forge-releases/releases/download/v0.59.1/gines-forge-0.59.1-x86_64-linux.tar.gz",
+  "published_at": "2026-10-16T10:30:38Z"
 }
