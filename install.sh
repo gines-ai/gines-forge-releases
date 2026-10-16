@@ -118,6 +118,17 @@ mkdir -p "$BIN"
 for w in gines-forged forge-cli; do
   printf '#!/bin/sh\nexec "%s/current/bin/%s" "$@"\n' "$BASE" "$w" > "$BIN/$w.tmp" && chmod 755 "$BIN/$w.tmp" && mv -f "$BIN/$w.tmp" "$BIN/$w"
 done
+# Smoke: os dois executaveis TEM de responder a partir de ~/.local/bin (um host
+# atualizado ficou sem forge-cli, 2026-10-16). Falha aqui e falha da instalacao.
+for w in gines-forged forge-cli; do
+  [ -x "$BIN/$w" ] || { echo "ERRO: $BIN/$w nao foi gravado" >&2; exit 1; }
+done
+"$BIN/gines-forged" --version | grep -q "$VERSAO" || { echo "ERRO: $BIN/gines-forged nao responde a versao $VERSAO" >&2; exit 1; }
+"$BIN/forge-cli" --help >/dev/null || { echo "ERRO: $BIN/forge-cli nao responde" >&2; exit 1; }
+case ":$PATH:" in
+  *":$BIN:"*) ;;
+  *) echo "AVISO: $BIN nao esta no PATH desta sessao; abra outro shell ou use o caminho completo" >&2 ;;
+esac
 
 echo ">> servico de usuario"
 mkdir -p "$UNIT_DIR"
